@@ -194,6 +194,17 @@ create table if not exists public.economy_events (
   created_at timestamptz not null default now()
 );
 
+create table if not exists public.economy_daily_summaries (
+  owner_id uuid not null references public.profiles(id) on delete cascade,
+  summary_date date not null default (timezone('utc',now()))::date,
+  energy_delta numeric(24,2) not null default 0,
+  total_energy_delta numeric(24,2) not null default 0,
+  total_clicks_delta bigint not null default 0,
+  update_count integer not null default 0 check(update_count>=0),
+  updated_at timestamptz not null default now(),
+  primary key(owner_id,summary_date)
+);
+
 create table if not exists public.admin_audit_log (
   id bigint generated always as identity primary key,
   actor_id uuid references public.profiles(id) on delete set null,
@@ -321,7 +332,9 @@ create index if not exists market_bids_listing_idx on public.market_bids(listing
 create index if not exists gold_ledger_owner_idx on public.gold_ledger(owner_id,created_at desc);
 create index if not exists economy_events_owner_idx on public.economy_events(owner_id,created_at desc);
 create index if not exists economy_events_type_idx on public.economy_events(event_type,created_at desc);
+create index if not exists economy_events_created_idx on public.economy_events(created_at);
 create index if not exists admin_audit_actor_idx on public.admin_audit_log(actor_id,created_at desc);
+create index if not exists admin_audit_created_idx on public.admin_audit_log(created_at);
 create index if not exists trade_offers_proposer_idx on public.trade_offers(proposer_id,status,created_at desc);
 create index if not exists trade_offers_recipient_idx on public.trade_offers(recipient_id,status,created_at desc);
 create index if not exists card_fusions_owner_idx on public.card_fusions(owner_id,created_at desc);
@@ -329,5 +342,13 @@ create index if not exists player_cards_active_variant_idx on public.player_card
 create index if not exists watchlist_card_target_idx on public.card_watchlist(card_id,variant,target_price);
 create index if not exists notifications_owner_unread_idx on public.notifications(owner_id,created_at desc) where read_at is null;
 create unique index if not exists notifications_reference_once_idx on public.notifications(owner_id,type,reference_id) where reference_id is not null;
+create index if not exists notifications_read_cleanup_idx on public.notifications(read_at,created_at) where read_at is not null;
+create index if not exists market_listings_cleanup_idx on public.market_listings(status,updated_at);
+create index if not exists market_bids_created_idx on public.market_bids(created_at);
+create index if not exists trade_offers_cleanup_idx on public.trade_offers(status,updated_at);
+create index if not exists player_cards_retired_cleanup_idx on public.player_cards(retired_at) where retired_at is not null;
+create index if not exists system_card_pool_claimed_cleanup_idx on public.system_card_pool(claimed_at) where claimed_at is not null;
+create index if not exists daily_claims_date_idx on public.daily_claims(claim_date);
+create index if not exists rate_limit_window_idx on public.rate_limit_buckets(window_started_at);
 
 commit;

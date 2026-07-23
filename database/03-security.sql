@@ -21,12 +21,17 @@ $$;
 
 create or replace function public.log_admin_change()
 returns trigger language plpgsql security definer set search_path=public as $$
-declare before_data jsonb; after_data jsonb; target_id text;
+declare before_row jsonb; after_row jsonb; before_data jsonb; after_data jsonb; target_id text;
 begin
  if not public.is_collectverse_admin() then if tg_op='DELETE' then return old; else return new; end if; end if;
- before_data:=case when tg_op='INSERT' then null else to_jsonb(old) end;
- after_data:=case when tg_op='DELETE' then null else to_jsonb(new) end;
- target_id:=coalesce(after_data->>'id',before_data->>'id',after_data->>'key',before_data->>'key',after_data->>'owner_id',before_data->>'owner_id');
+ before_row:=case when tg_op='INSERT' then null else to_jsonb(old) end;
+ after_row:=case when tg_op='DELETE' then null else to_jsonb(new) end;
+ if tg_op='UPDATE' then
+  select coalesce(jsonb_object_agg(b.key,b.value),'{}'::jsonb) into before_data from jsonb_each(before_row)b where after_row->b.key is distinct from b.value;
+  select coalesce(jsonb_object_agg(a.key,a.value),'{}'::jsonb) into after_data from jsonb_each(after_row)a where before_row->a.key is distinct from a.value;
+ else before_data:=before_row;after_data:=after_row;
+ end if;
+ target_id:=coalesce(after_row->>'id',before_row->>'id',after_row->>'key',before_row->>'key',after_row->>'owner_id',before_row->>'owner_id');
  insert into public.admin_audit_log(actor_id,action,table_name,record_id,old_data,new_data)
  values(auth.uid(),tg_op,tg_table_name,target_id,before_data,after_data);
  if tg_op='DELETE' then return old; else return new; end if;
@@ -60,6 +65,7 @@ alter table public.patch_notes enable row level security;
 alter table public.app_settings enable row level security;
 alter table public.rate_limit_buckets enable row level security;
 alter table public.economy_events enable row level security;
+alter table public.economy_daily_summaries enable row level security;
 alter table public.admin_audit_log enable row level security;
 alter table public.market_listings enable row level security;
 alter table public.market_bids enable row level security;
@@ -102,6 +108,8 @@ drop policy if exists own_ledger_read on public.gold_ledger;
 create policy own_ledger_read on public.gold_ledger for select to authenticated using(auth.uid()=owner_id);
 drop policy if exists own_economy_events_read on public.economy_events;
 create policy own_economy_events_read on public.economy_events for select to authenticated using(auth.uid()=owner_id or public.is_collectverse_admin());
+drop policy if exists own_economy_daily_summaries_read on public.economy_daily_summaries;
+create policy own_economy_daily_summaries_read on public.economy_daily_summaries for select to authenticated using(auth.uid()=owner_id or public.is_collectverse_admin());
 drop policy if exists admin_audit_read on public.admin_audit_log;
 create policy admin_audit_read on public.admin_audit_log for select to authenticated using(public.is_collectverse_admin());
 drop policy if exists trade_parties_read on public.trade_offers;
@@ -109,7 +117,10 @@ create policy trade_parties_read on public.trade_offers for select to authentica
 drop policy if exists trade_items_parties_read on public.trade_offer_items;
 create policy trade_items_parties_read on public.trade_offer_items for select to authenticated using(exists(select 1 from public.trade_offers t where t.id=trade_id and auth.uid() in(t.proposer_id,t.recipient_id)));
 drop policy if exists trade_reservations_owner_read on public.trade_reserved_cards;
-create policy trade_reservations_owner_read on public.trade_reserved_cards for select to authenticated using(auth.uid()=owner_id);
+drop policy if exists trade_reservations_authenticated_read on public.trade_reserved_cards;
+create policy trade_reservations_authenticated_read on public.trade_reserved_cards
+for select to authenticated
+using(exists(select 1 from public.trade_offers t where t.id=trade_id and t.status='pending'));
 drop policy if exists card_fusions_owner_read on public.card_fusions;
 create policy card_fusions_owner_read on public.card_fusions for select to authenticated using(auth.uid()=owner_id or public.is_collectverse_admin());
 drop policy if exists watchlist_owner_read on public.card_watchlist;
@@ -129,7 +140,7 @@ drop policy if exists admin_settings_all on public.app_settings;
 create policy admin_settings_all on public.app_settings for all to authenticated using(public.is_collectverse_admin()) with check(public.is_collectverse_admin());
 
 revoke all on all tables in schema public from anon,authenticated;
-grant select on public.profiles,public.card_sets,public.cards,public.player_cards,public.upgrades,public.player_upgrades,public.pack_types,public.badges,public.player_badges,public.patch_notes,public.app_settings,public.market_listings,public.market_bids,public.gold_ledger,public.economy_events,public.admin_audit_log,public.trade_offers,public.trade_offer_items,public.trade_reserved_cards,public.card_fusions,public.card_watchlist,public.notifications to authenticated;
+grant select on public.profiles,public.card_sets,public.cards,public.player_cards,public.upgrades,public.player_upgrades,public.pack_types,public.badges,public.player_badges,public.patch_notes,public.app_settings,public.market_listings,public.market_bids,public.gold_ledger,public.economy_events,public.economy_daily_summaries,public.admin_audit_log,public.trade_offers,public.trade_offer_items,public.trade_reserved_cards,public.card_fusions,public.card_watchlist,public.notifications to authenticated;
 grant select on public.card_sets,public.cards,public.upgrades,public.pack_types,public.badges,public.patch_notes,public.app_settings to anon;
 grant insert,update,delete on public.card_sets,public.cards,public.pack_types,public.patch_notes,public.app_settings to authenticated;
 

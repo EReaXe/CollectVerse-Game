@@ -2,3 +2,11 @@
 .maintenance-editor{max-width:760px}
 .maintenance-badge{padding:8px 12px;border:1px solid var(--line);border-radius:99px;color:var(--muted);font-size:12px;font-weight:800}
 .maintenance-badge.active{border-color:#ff657766;background:#ff657712;color:#ff8b99}
+
+/* Yönetim paneli de oyuncu arayüzüyle aynı tasarım sistemini kullanır. */
+.admin-header{border-color:var(--line)}
+.admin-tabs button{border-color:var(--line);background:rgba(17,24,42,.82)}
+.admin-tabs button:hover{border-color:rgba(167,139,250,.5);color:#fff}
+.admin-tabs button.active{border-color:rgba(187,166,255,.7);background:linear-gradient(135deg,var(--accent),#5b36dc);color:#fff;box-shadow:0 10px 24px rgba(91,54,220,.22)}
+.admin-row{border-color:var(--line);background:#0b111f}
+.row-actions button{border-color:var(--line);background:rgba(255,255,255,.02)}

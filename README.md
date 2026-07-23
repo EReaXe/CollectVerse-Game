@@ -19,6 +19,7 @@ Framework kullanmadan geliştirilmiş, Supabase tabanlı çevrim içi kart kolek
 - İnternet kesintisinde otomatik çevrimdışı ekranı ve yeniden deneme akışı
 - Çoklu kart ve Gold destekli, rezervasyonlu oyuncudan oyuncuya doğrudan takas
 - Numaralı Supabase migration'ları, ekonomi hareket günlüğü, yönetici denetim izi ve işlem rate limit altyapısı
+- Günlük özetlenen enerji hareketleri, süreli veri saklama ve toplu veritabanı bakımı
 - 5 Standard → 1 Foil ve 3 Foil → 1 Gold Foil kart birleştirme atölyesi; emekli malzeme ve fusion geçmişi
 - RLS, atomik RPC işlemleri ve Gold hareket defteri
 - Kart, set, paket ve yama notu yönetim paneli
@@ -64,4 +65,5 @@ where p.id = u.id and u.email = 'yonetici@ornek.com';
 
 ## Kontrol
 
-Node.js 20 veya üzeriyle `npm test` çalıştır.
+Veritabanı kurulumundan sonra `database/05-verify.sql` ve
+`database/tests/` altındaki SQL regresyon kontrollerini çalıştır.

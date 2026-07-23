@@ -8,6 +8,7 @@ psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f database/tests/02-direct-trades.test.
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f database/tests/03-card-fusion.test.sql
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f database/tests/04-card-price-history.test.sql
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f database/tests/05-watchlist-notifications.test.sql
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f database/tests/06-storage-optimization.test.sql
 ```
 
 Testleri üretim veritabanına karşı değil, migration uygulanmış geçici test projesine karşı çalıştır.

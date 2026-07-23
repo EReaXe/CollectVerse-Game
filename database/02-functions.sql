@@ -32,12 +32,27 @@ end $$;
 
 create or replace function public.log_profile_economy_change()
 returns trigger language plpgsql security definer set search_path=public as $$
-declare energy_change numeric:=new.energy-old.energy; gold_change bigint:=new.gold-old.gold;
+declare
+ energy_change numeric:=new.energy-old.energy;
+ gold_change bigint:=new.gold-old.gold;
+ total_energy_change numeric:=new.total_energy-old.total_energy;
+ total_clicks_change bigint:=new.total_clicks-old.total_clicks;
+ event_name text:=coalesce(nullif(current_setting('collectverse.event_type',true),''),'balance_change');
 begin
- if energy_change<>0 or gold_change<>0 then
+ if energy_change<>0 or total_energy_change<>0 or total_clicks_change<>0 then
+  insert into public.economy_daily_summaries(owner_id,summary_date,energy_delta,total_energy_delta,total_clicks_delta,update_count,updated_at)
+  values(new.id,(timezone('utc',now()))::date,energy_change,total_energy_change,total_clicks_change,1,now())
+  on conflict(owner_id,summary_date) do update set
+   energy_delta=public.economy_daily_summaries.energy_delta+excluded.energy_delta,
+   total_energy_delta=public.economy_daily_summaries.total_energy_delta+excluded.total_energy_delta,
+   total_clicks_delta=public.economy_daily_summaries.total_clicks_delta+excluded.total_clicks_delta,
+   update_count=public.economy_daily_summaries.update_count+1,
+   updated_at=now();
+ end if;
+ if gold_change<>0 then
   insert into public.economy_events(owner_id,actor_id,event_type,energy_delta,gold_delta,metadata)
-  values(new.id,auth.uid(),coalesce(nullif(current_setting('collectverse.event_type',true),''),'balance_change'),energy_change,gold_change,
-   jsonb_build_object('total_energy_delta',new.total_energy-old.total_energy,'total_clicks_delta',new.total_clicks-old.total_clicks));
+  values(new.id,auth.uid(),event_name,energy_change,gold_change,
+   jsonb_build_object('total_energy_delta',total_energy_change,'total_clicks_delta',total_clicks_change));
  end if;
  return new;
 end $$;

@@ -2,9 +2,9 @@
 <html lang="tr">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
   <meta name="description" content="Enerji üret, kart paketleri aç ve koleksiyonunu büyüt.">
-  <meta name="theme-color" content="#080b14">
+  <meta name="theme-color" content="#070912">
   <title>CollectVerse</title>
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -27,7 +27,8 @@
   </section>
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
-  <main id="authView" class="auth-layout">
+  <div id="bootSplash" class="boot-splash" aria-live="polite"><span class="brand-mark">C</span><strong>CollectVerse</strong><small>Evren hazırlanıyor…</small></div>
+  <main id="authView" class="auth-layout hidden">
     <section class="auth-story">
       <a class="brand" href="#"><span class="brand-mark">C</span><span>CollectVerse</span></a>
       <div class="auth-copy"><p class="kicker">KOLEKSİYON EVRENİNE HOŞ GELDİN</p><h1>Üret. Keşfet.<br><em>Koleksiyonunu kur.</em></h1><p>Enerji çekirdeğini geliştir, nadir kart paketleri aç ve canlı oyuncu pazarında yerini al.</p></div>
@@ -88,7 +89,7 @@
   </div>
 
   <dialog id="cardDialog" class="dialog"><button class="dialog-close" data-close-dialog aria-label="Kapat">×</button><div id="cardDialogBody"></div></dialog>
-  <dialog id="packDialog" class="dialog pack-dialog"><button class="dialog-close" data-close-dialog aria-label="Kapat">×</button><p class="kicker">PAKET SONUCU</p><h2>Yeni kart keşfedildi</h2><div id="packResult"></div><button class="button primary full" data-close-dialog>Koleksiyona ekle</button></dialog>
+  <dialog id="packDialog" class="dialog pack-dialog"><button class="dialog-close" data-close-dialog aria-label="Kapat">×</button><div class="pack-dialog-heading"><p class="kicker">PAKET SONUCU</p><h2>Yeni kart keşfedildi</h2></div><div id="packResult"></div><button class="button primary full" data-close-dialog>Koleksiyona ekle</button></dialog>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js"></script>
